@@ -1,5 +1,6 @@
 import os
 import shutil
+import tkinter as tk
 
 file_types = {
     "images": ["png", "jpg", "jpeg", "gif", "bmp", "webp", "tiff", "svg"],
@@ -20,65 +21,53 @@ file_types = {
 }
 
 def organize_files(base_folder):
-
     skip_folders = set(file_types.keys()) | {"others"}
-
     for root, dirs, files in os.walk(base_folder):
-
-        # prevent scanning folders we create
         dirs[:] = [d for d in dirs if d not in skip_folders]
-
         for file in files:
-
             file_path = os.path.join(root, file)
-
             extension = os.path.splitext(file)[1].lower().lstrip('.')
-
             category = "others"
-
             for key, ext_list in file_types.items():
                 if extension in ext_list:
                     category = key
                     break
-
             destination_folder = os.path.join(base_folder, category)
             os.makedirs(destination_folder, exist_ok=True)
-
             destination_path = os.path.join(destination_folder, file)
-
-            # duplicate protection
             if os.path.exists(destination_path):
-
                 name, ext = os.path.splitext(file)
                 counter = 1
-
                 while os.path.exists(destination_path):
                     new_name = f"{name}({counter}){ext}"
                     destination_path = os.path.join(destination_folder, new_name)
                     counter += 1
-
             shutil.move(file_path, destination_path)
 
+def start_organizing():
+    folder = entry.get()  # ✅ Get user input from Entry
+    if os.path.isdir(folder):
+        organize_files(folder)
+        result_label.config(text="Files Organized Successfully")
+    else:
+        result_label.config(text="Invalid folder path")
 
 def main():
+    global entry, result_label
+    root = tk.Tk()
+    root.title("File Organizer")
+    root.geometry("600x200")
 
-    while True:
+    tk.Label(root, text="Enter folder path to organize:").grid(row=0, column=0, padx=10, pady=10)
+    entry = tk.Entry(root, width=50)
+    entry.grid(row=0, column=1, padx=10, pady=10)
 
-        folder = input("Enter folder path to organize: ")
+    tk.Button(root, text="Organize", command=start_organizing).grid(row=1, column=1, pady=10)
 
-        if os.path.isdir(folder):
+    result_label = tk.Label(root, text="")
+    result_label.grid(row=2, column=1)
 
-            organize_files(folder)
-            print("Files organized successfully.")
-
-            opt = input("Do you want to organize another folder? (y/n): ")
-
-            if opt.lower() == "n":
-                break
-
-        else:
-            print("Invalid folder path.")
-
+    root.mainloop()
 
 if __name__ == "__main__":
     main()
